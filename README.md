@@ -1,1 +1,1 @@
-# XGBoost_Tree_Linear
+# XGBoost Tree vs. Linear Booster in Simulation
