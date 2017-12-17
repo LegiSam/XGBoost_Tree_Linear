@@ -1,0 +1,48 @@
+---
+title: "XGBoost Tree vs. Linear"
+author: "Fabian Müller"
+date: "17 12 2017"
+output: html_document
+references:
+- id: chen2016
+  title: XGBoost - A Scalable Tree Boosting System
+  author:
+  - family: Chen
+    given: Tianqi
+  - family: Guestrin
+    given: Carlos
+  URL: 'https://arxiv.org/pdf/1603.02754.pdf'
+  type: article-journal
+  issued:
+    year: 2016
+---
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Einleitung
+
+Im Rahmen der diesjährigen H2O World fand unter anderem auch ein [Kaggle Grandmaster Panel](https://www.youtube.com/watch?feature=youtu.be&v=bFHRmesTCc0&app=desktop) statt. Die Teilnehmner, Gilberto Titericz (Airbnb), Mathias Müller (H2O.ai), Dmitry Larko (H2O.ai), Marios Michailidis (H2O.ai) und Mark Landry (H2O.ai), beantworteten darin verschiedene Fragen rund um das Thema Data Science und Kaggle. 
+
+Eine, zugegebenermaßen zu erwartende, Frage aus dem Publikum drehte sich um die von den Grandmastern genutzten Tools und Algorithmen. Gemeinsamer Nenner war hier die Gradient Boosting Implementation XGBoostc [@chen2016]. Eine an sich nicht weiter verwunderliche Antwort, ist doch schon lange bekannt, dass XGBoost einer der am weitesten verbreitete Algorithmus für Data Science Fragestellung ist. 
+
+Die Popularität von XGBoost manifestiert sich unter anderem in unzähligen Blogbeiträgen zur Verwendung von XGBoost. Dies beinhaltet Tutorials für [R](https://www.hackerearth.com/practice/machine-learning/machine-learning-algorithms/beginners-tutorial-on-xgboost-parameter-tuning-r/tutorial) und [Python](https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn), dem [Tuning der Hyperparameter](https://www.dataiku.com/learn/guide/code/python/advanced-xgboost-tuning.html) und sogar dem Einsatz von [XGBoost auf GPUS mit Hilfe von CUDA](https://devblogs.nvidia.com/parallelforall/gradient-boosting-decision-trees-xgboost-cuda).
+
+Auch wir bei STATWORX setzten XGBoost immer wieder bei unseren externen und internen Projekten ein. Eine Frage die uns dabei immer wieder begegnet ist die nach dem zu verwendenden **Base-Learnern** (auch genannt *Booster*). Im Folgenden soll diese Fragestellung systematischer untersucht werden.
+
+## Review XGBoost
+
+
+
+## Simulation
+
+
+
+
+# References
+
+
+
