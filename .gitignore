@@ -4,4 +4,6 @@
 .RData
 .Ruserdata
 *.Rproj
+*.html
+*.png
 02_results
