@@ -70,10 +70,16 @@ Zur Auswahl stehen sowohl Entscheidungsbäume (`gbtree` und `dart`) wie auch lin
 
 ## Simulation and Setup
 
-The general simulation framework looks as follows. First, simulate four datasets, two for classification and two for regression. Second, on each dataset, train a boosting model with tree and linear base learners, respectively. Third, compare the predictive performance between both base learners. 
+We use the following Monte Carlo simulation:
 
-As for simulation, we use the functions `twoClassSim()`, `LPH07_1()`, `LPH07_2()`, `SLC14_1()` from the `caret` package.
-Each data set consists of `n = 1000` observations. In addition to the relevant features, a variying number of (correlated) random features was added. Note that in order to match real life data, all data generating processes involve non-linear components. For further details, we advise the reader to take a look at the `caret` package documentation.
+1) Draw a random number $n$ from a uniform distrubtion $[100, 2500]$.   
+2) Simulate four datasets each having $n$ observations, two for classification and two for regression.   
+3) On each dataset, train a boosting model with tree and linear base learners, respectively.   
+4) Calculate an appropriate error metric for each model on each dataset.   
+
+Repeat the outlined procedure $m = 100$ times. 
+
+As for simulation, we use the functions `twoClassSim()`, `LPH07_1()`, `LPH07_2()`, `SLC14_1()` from the `caret` package. In addition to the relevant features, a variying number of (correlated) random features was added. Note that in order to match real life data, all data generating processes involve non-linear components. For further details, we advise the reader to take a look at the `caret` package documentation.
 
 For each datasets, we apply the same (random) splitting strategies where 70% of the data goes to training, 15% is used for validation, and the last 15% is used for testing. Regarding hyperparameter tuning, we use a grid-search strategy in combindation with 10-fold crossvalidation on the training data. Regardless of the base learner type, $L1$ (`alpha`) and $L2$ (`lambda`) regularization were tuned using a shared parameter space.
 For tree boosting, the learning rate (`eta`) was held constant at 0.3 while tuning the optimal tree size (`max_depth`). Finally, we used a fixed number of 1000 boosting iterations (`nrounds`) in combination with ten early stopping rounds (`early_stopping_rounds`) on the validation frame. The final performance was evaluated by appliying the model with the best parameters on the test dataset. 
@@ -81,18 +87,53 @@ For tree boosting, the learning rate (`eta`) was held constant at 0.3 while tuni
 
 ## Results
 
-Figure 1 shows the final out of sample classification error for both datasets measured by the AUC.
+Figure 1 shows the distribution of out of sample classification errors for both datasets measured by the AUC.
 
-As one can see, the model using tree base learners ($AUC = 0.89$) is substiantially better than his linear counterpart ($AUC = 0.93$) for the first dataset (simulated by `twoClassSim()`). For the second dataset (simulated by `LPH07_1()`), the errors are almost identical with $AUC = 0.77$. 
+For the first dataset, the models using tree learners ($\mu_{tree} = 0.952$) are on average better than the models with linear learners ($\mu_{linear} = 0.915$). However, the tree models exhibit a greater variance ($\sigma_{tree} = 0.037$, $\sigma_{linear} = 0.015$) that manifest itself in a bimodal distribution.
 
-<center>![](plots/result_oos_classification.png){ width=75%}</center>
+For the second dataset, the relationship is reversed. On average, the linear models are slightly better ($\mu_{tree} = 0.733$, $\mu_{linear} = 0.755$) and the tree models exhibit a lower variance ($\sigma_{tree} = 0.032$, $\sigma_{linear} = 0.039$)
+
+
+<center>![](plots/result_oos_classification.png){ width=90%}</center>
 
 Figure 2 shows the final out of sample regression error for both datasets measured by the RMSE.
 
-In contrast to classification case, there is for both datasets a substential difference in performance between the two model specifications.
+In contrast to the classification case, there is for both datasets a substential difference in performance in favor of the tree models.
+For the third dataset, the tree models are on average ($\mu_{tree} = 17.423$) better than their linear counterparts (($\mu_{linear} = 45.430$)). Also, the variance of the results is also substential higher for the tree models ($\sigma_{tree} = 8.729$, $\sigma_{linear} = 2.510$).
+
+For the fourth dataset, the results are similar. The tree models ($\mu_{tree} = 5.971$) are again better on average than their linear counterparts (($\mu_{linear} =17.672$)), but feature a higher dispersion ($\sigma_{tree} = 2.733$, $\sigma_{linear} = 0.983$).
 
 
-<center>![](plots/result_oos_regression.png){ width=75% }</center>
+<center>![](plots/result_oos_regression.png){ width=90% }</center>
+
+
+Somewhat surprisingly, there is just a small to medium correlation between the perfomances of the two models for a given dataset (see figure 3):
+
+Dataset| Correlation
+-----|-----:
+1|0.146
+2|0.646
+3|0.123
+4|0.297
+
+
+<center>![](plots/result_oos_cor.png){ width=90% }</center>
+
+
+In the end, it might be worth to take a look at the relationship between model performance and number of obversations in a dataset.
+As one can see in figure 4, there is almost no evidence for such an relationship. The performance is indepdentend of the number of simulated data points (at least for the range between 100 and 2500 observations). As described before, figure 3 also illustrates the greater variance of the tree based models.
+
+<center>![](plots/result_oos_n_sims.png){ width=90% }</center>
+
+
+## Summary
+
+The results from a Monte Carlo simulation with 100 artificial datasets show that XGBoost with tree and linear base learners yield comparable results for classification problems, while tree learners are superior for regression problems. Based on this result, there is no single recommendation which model specification one should when trying to minimize the model bias. In addition, tree based XGBoost models suffer from higher estimation variance compared to their linear counterparts. This findig is probably related to the more sophisticated parameter space of tree models. 
+
+
+
+
+
 
 
 
