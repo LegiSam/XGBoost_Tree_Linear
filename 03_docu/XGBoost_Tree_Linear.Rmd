@@ -15,6 +15,18 @@ references:
   type: article-journal
   issued:
     year: 2016
+- id: Natekin2013
+  title: Gradient boosting machines, a tutorial
+  author:
+  - family: Natekin
+    given: Alexey
+  - family: Knoll
+    given: Alois
+  URL: 'https://www.frontiersin.org/articles/10.3389/fnbot.2013.00021/full'
+  type: article-journal
+  issued:
+    year: 2013
+      
 ---
 
 ---
@@ -23,26 +35,70 @@ references:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Einleitung
+## Introduction
 
-Im Rahmen der diesjährigen H2O World fand unter anderem auch ein [Kaggle Grandmaster Panel](https://www.youtube.com/watch?feature=youtu.be&v=bFHRmesTCc0&app=desktop) statt. Die Teilnehmner, Gilberto Titericz (Airbnb), Mathias Müller (H2O.ai), Dmitry Larko (H2O.ai), Marios Michailidis (H2O.ai) und Mark Landry (H2O.ai), beantworteten darin verschiedene Fragen rund um das Thema Data Science und Kaggle. 
+Im Rahmen der diesjährigen [H2O World](https://h2oworld.h2o.ai) fand unter anderem auch ein [Kaggle Grandmaster Panel](https://www.youtube.com/watch?feature=youtu.be&v=bFHRmesTCc0&app=desktop) statt. Die Teilnehmner, [Gilberto Titericz](https://www.kaggle.com/titericz) (Airbnb), Mathias Müller (H2O.ai), [Dmitry Larko](https://www.kaggle.com/dmitrylarko) (H2O.ai), Marios Michailidis (H2O.ai) und Mark Landry (H2O.ai), beantworteten darin verschiedene Fragen rund um das Thema Data Science und Kaggle. 
 
-Eine, zugegebenermaßen zu erwartende, Frage aus dem Publikum drehte sich um die von den Grandmastern genutzten Tools und Algorithmen. Gemeinsamer Nenner war hier die Gradient Boosting Implementation XGBoostc [@chen2016]. Eine an sich nicht weiter verwunderliche Antwort, ist doch schon lange bekannt, dass XGBoost einer der am weitesten verbreitete Algorithmus für Data Science Fragestellung ist. 
+Eine, zugegebenermaßen zu erwartende, Frage aus dem Publikum drehte sich um die von den Grandmastern genutzten Tools und Algorithmen. Gemeinsamer Nenner war hier die Gradient Boosting Implementation XGBoost [@chen2016]. Eine an sich nicht weiter verwunderliche Antwort, ist doch schon lange bekannt, dass XGBoost einer der am weitesten verbreitete Algorithmus für Data Science Fragestellung ist. 
 
-Die Popularität von XGBoost manifestiert sich unter anderem in unzähligen Blogbeiträgen zur Verwendung von XGBoost. Dies beinhaltet Tutorials für [R](https://www.hackerearth.com/practice/machine-learning/machine-learning-algorithms/beginners-tutorial-on-xgboost-parameter-tuning-r/tutorial) und [Python](https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn), dem [Tuning der Hyperparameter](https://www.dataiku.com/learn/guide/code/python/advanced-xgboost-tuning.html) und sogar dem Einsatz von [XGBoost auf GPUS mit Hilfe von CUDA](https://devblogs.nvidia.com/parallelforall/gradient-boosting-decision-trees-xgboost-cuda).
+Die Popularität von XGBoost manifestiert sich unter anderem auch in unzähligen Blogbeiträgen zur Verwendung von XGBoost. Dies beinhaltet Tutorials für [R](https://www.hackerearth.com/practice/machine-learning/machine-learning-algorithms/beginners-tutorial-on-xgboost-parameter-tuning-r/tutorial) und [Python](https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn), dem [Tuning der Hyperparameter](https://www.dataiku.com/learn/guide/code/python/advanced-xgboost-tuning.html) und sogar dem Einsatz von [XGBoost auf GPUS mit Hilfe von CUDA](https://devblogs.nvidia.com/parallelforall/gradient-boosting-decision-trees-xgboost-cuda).
 
-Auch wir bei STATWORX setzten XGBoost immer wieder bei unseren externen und internen Projekten ein. Eine Frage die uns dabei immer wieder begegnet ist die nach dem zu verwendenden **Base-Learnern** (auch genannt *Booster*). Im Folgenden soll diese Fragestellung systematischer untersucht werden.
+Auch wir bei STATWORX setzten XGBoost immer wieder erfolgreich bei unseren externen und internen Projekten ein. Eine Frage die uns dabei immer wieder begegnet ist die nach dem zu verwendenden **Base-Learnern** (auch genannt *Booster*). Im Folgenden soll diese Fragestellung systematischer untersucht werden.
 
-## Review XGBoost
+## Weak Learner
+
+Grundsätzlich kann Gradient Boosting als Kombination verschiedener einzelner Modelle (sogenannte *Base Learner* oder *Weak Learner*) zu einem Ensemble Modell interpretiert werden (@Natekin2013). 
+Die Wahl der Base Learner ist dabei theoretisch keine Grenzen gesetzt. In der Praxis haben sich verschiedene Methoden bewährt:   
+Lineare und penalisierte Modelle (), (P/B-) Splines () und insbesondere Entscheidungsbäume (). Wenig häufig genutzte Base Learner umfassen zum Beispiel Random Effects (Tutz/Groll 2009), Radial Basis Functions (Gomez-Verdejo et al. 2002), Markov Random Fields () und Wavlets (Dubossarsky et al. 2016). 
+
+Chen and Guestrin (2016) beschreiben die in XGBoost umgesetzte Form des Gradient Boosting, gegeben der Daten $D = \{(y_i, x_i)\}$, als additive Funktion der folgenden Form:
+
+$$\hat{y_i} = \phi(x_i) = \sum^{K}_{k=1} f_k(x_i),\textrm{  } f_k\in F$$
+
+Dabei wird im Original $f_k(x) \forall k = 1, ...K$ als *Classification and Regression Tree* (CART) definiert. Aufmerksame Leser der Dokumentation wissen jedoch, dass mit Hilfe des `booster` Arguments eine Möglichkeit gibt die funktionale Form von $f_k(x)$ zu ändern:
+
+```{r, eval=FALSE}
+# Beispiel XGBoost mit Tree Booster in R
+xgboost(data = train_DMatrix,
+        obj = "reg:linear".
+        eval_metric = "rmse",
+        booster = "gbtree")
+```
+
+Zur Auswahl stehen sowohl Entscheidungsbäume (`gbtree` und `dart`) wie auch lineare Modelle (`gblinear`).
+
+
+## Simulation and Setup
+
+The general simulation framework looks as follows. First, simulate four datasets, two for classification and two for regression. Second, on each dataset, train a boosting model with tree and linear base learners, respectively. Third, compare the predictive performance between both base learners. 
+
+As for simulation, we use the functions `twoClassSim()`, `LPH07_1()`, `LPH07_2()`, `SLC14_1()` from the `caret` package.
+Each data set consists of `n = 1000` observations. In addition to the relevant features, a variying number of (correlated) random features was added. Note that in order to match real life data, all data generating processes involve non-linear components. For further details, we advise the reader to take a look at the `caret` package documentation.
+
+For each datasets, we apply the same (random) splitting strategies where 70% of the data goes to training, 15% is used for validation, and the last 15% is used for testing. Regarding hyperparameter tuning, we use a grid-search strategy in combindation with 10-fold crossvalidation on the training data. Regardless of the base learner type, $L1$ (`alpha`) and $L2$ (`lambda`) regularization were tuned using a shared parameter space.
+For tree boosting, the learning rate (`eta`) was held constant at 0.3 while tuning the optimal tree size (`max_depth`). Finally, we used a fixed number of 1000 boosting iterations (`nrounds`) in combination with ten early stopping rounds (`early_stopping_rounds`) on the validation frame. The final performance was evaluated by appliying the model with the best parameters on the test dataset. 
+
+
+## Results
+
+Figure 1 shows the final out of sample classification error for both datasets measured by the AUC.
+
+As one can see, the model using tree base learners ($AUC = 0.89$) is substiantially better than his linear counterpart ($AUC = 0.93$) for the first dataset (simulated by `twoClassSim()`). For the second dataset (simulated by `LPH07_1()`), the errors are almost identical with $AUC = 0.77$. 
+
+<center>![](plots/result_oos_classification.png){ width=75%}</center>
+
+Figure 2 shows the final out of sample regression error for both datasets measured by the RMSE.
+
+In contrast to classification case, there is for both datasets a substential difference in performance between the two model specifications.
+
+
+<center>![](plots/result_oos_regression.png){ width=75% }</center>
 
 
 
-## Simulation
 
 
-
-
-# References
+## References
 
 
 
