@@ -42,35 +42,37 @@ load(file = "../02_results/sim_results_summary.RData")
 
 ## Introduction
 
-Im Rahmen der diesjährigen [H2O World](https://h2oworld.h2o.ai) fand unter anderem auch ein [Kaggle Grandmaster Panel](https://www.youtube.com/watch?feature=youtu.be&v=bFHRmesTCc0&app=desktop) statt. Die Teilnehmner, [Gilberto Titericz](https://www.kaggle.com/titericz) (Airbnb), Mathias Müller (H2O.ai), [Dmitry Larko](https://www.kaggle.com/dmitrylarko) (H2O.ai), Marios Michailidis (H2O.ai) und Mark Landry (H2O.ai), beantworteten darin verschiedene Fragen rund um das Thema Data Science und Kaggle. 
+One of the highlights of this year's [H2O World](https://h2oworld.h2o.ai) was a [Kaggle Grandmaster Panel](https://www.youtube.com/watch?feature=youtu.be&v=bFHRmesTCc0&app=desktop). The attendees, [Gilberto Titericz](https://www.kaggle.com/titericz) (Airbnb), Mathias Müller (H2O.ai), [Dmitry Larko](https://www.kaggle.com/dmitrylarko) (H2O.ai), Marios Michailidis (H2O.ai), and Mark Landry (H2O.ai), answered various questions about Kaggle and data science in general. 
 
-Eine, zugegebenermaßen zu erwartende, Frage aus dem Publikum drehte sich um die von den Grandmastern genutzten Tools und Algorithmen. Gemeinsamer Nenner war hier die Gradient Boosting Implementation XGBoost [@chen2016]. Eine an sich nicht weiter verwunderliche Antwort, ist doch schon lange bekannt, dass XGBoost einer der am weitesten verbreitete Algorithmus für Data Science Fragestellung ist. 
+One of the questions from the audience was which tools and algorithms the Grandmasters frequently use. As expected, every single of them named the gradient boosting implementation XGBoost [@chen2016]. This is not suprising, since it is long known that XGBoost is at the moment the probably most used algorithm in data science.  
 
-Die Popularität von XGBoost manifestiert sich unter anderem auch in unzähligen Blogbeiträgen zur Verwendung von XGBoost. Dies beinhaltet Tutorials für [R](https://www.hackerearth.com/practice/machine-learning/machine-learning-algorithms/beginners-tutorial-on-xgboost-parameter-tuning-r/tutorial) und [Python](https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn), dem [Tuning der Hyperparameter](https://www.dataiku.com/learn/guide/code/python/advanced-xgboost-tuning.html) und sogar dem Einsatz von [XGBoost auf GPUS mit Hilfe von CUDA](https://devblogs.nvidia.com/parallelforall/gradient-boosting-decision-trees-xgboost-cuda).
+XGBoost popularity manifests itself in various blog posts. Including tutorials for [R](https://www.hackerearth.com/practice/machine-learning/machine-learning-algorithms/beginners-tutorial-on-xgboost-parameter-tuning-r/tutorial) and [Python](https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn), [Hyperparameter for XGBoost](https://www.dataiku.com/learn/guide/code/python/advanced-xgboost-tuning.html), and even [using XGBoost with Nvidia's CUDA GPU support](https://devblogs.nvidia.com/parallelforall/gradient-boosting-decision-trees-xgboost-cuda).
 
-Auch wir bei STATWORX setzten XGBoost immer wieder erfolgreich bei unseren externen und internen Projekten ein. Eine Frage die uns dabei immer wieder begegnet ist die nach dem zu verwendenden **Base-Learnern** (auch genannt *Booster*). Im Folgenden soll diese Fragestellung systematischer untersucht werden.
+At STATWORX, we also frequently leverage XGBoost's power for external and internal projects. One question that we lately asked ourself was 
+how big the difference between the two **base learners** (also called *boosters*) offered by XGBoost is? This posts tries to answer this question in a more systematic way.
+
 
 ## Weak Learner
 
-Grundsätzlich kann Gradient Boosting als Kombination verschiedener einzelner Modelle (sogenannte *Base Learner* oder *Weak Learner*) zu einem Ensemble Modell interpretiert werden (@Natekin2013). 
-Bei der Wahl der Base Learner ist der Phantasie theoretisch keine Grenzen gesetzt. In der Praxis haben sich verschiedene Methoden bewährt:   
-Lineare und penalisierte Modelle (Hastie et al. 2008), (P/B-) Splines (Huang/Yang 2004) und insbesondere Entscheidungsbäume (James et al. 2013). Weniger häufig genutzte Base Learner umfassen zum Beispiel Random Effects (Tutz/Groll 2009), Radial Basis Functions (Gomez-Verdejo et al. 2002), Markov Random Fields (Dietterich et al. 2004) und Wavlets (Dubossarsky et al. 2016). 
+Gradient boosting can be interpreted as a combination of single models (so called *base learner* or *weak learner*) to an ensemble model (@Natekin2013).
+In theory, any base learner can be used in the boosting framework, whereas some base learners have proven themself to be particularly useful: 
+Linear and penalized models (Hastie et al. 2008), (p/b-) splines (Huang/Yang 2004), and especially decision trees (James et al. 2013). Among the less frequently used base learners are random effects (Tutz/Groll 2009), radial basis functions (Gomez-Verdejo et al. 2002), markov random fields (Dietterich et al. 2004) und wavlets (Dubossarsky et al. 2016).
 
-Chen and Guestrin (2016) beschreiben die in XGBoost umgesetzte Form des Gradient Boosting, gegeben der Daten $D = \{(y_i, x_i)\}$, als additive Funktion der folgenden Form:
+Chen and Guestrin (2016) describe XGBoost as an additive function, given the data $D = \{(y_i, x_i)\}$, of the following form: 
 
 $$\hat{y_i} = \phi(x_i) = \sum^{K}_{k=1} f_k(x_i),\textrm{  } f_k\in F$$
 
-Dabei wird im Original $f_k(x) \forall k = 1, ...K$ als *Classification and Regression Tree* (CART) definiert. Aufmerksame Leser der Dokumentation wissen jedoch, dass mit Hilfe des `booster` Arguments eine Möglichkeit gibt die funktionale Form von $f_k(x)$ zu ändern:
+In their original paper, $f_k(x) \forall k = 1, ...K$ is defined as an *classification or regression tree* (CART). Apart from that, the alert reader of the technical documentation knows that one can alter the functional form of $f_k(x)$ by using the `booster` argument in R/Python:
 
 ```{r, eval=FALSE}
-# Beispiel XGBoost mit Tree Booster in R
+# Example of XGBoost for regression in R with trees (CART)
 xgboost(data = train_DMatrix,
         obj = "reg:linear".
         eval_metric = "rmse",
         booster = "gbtree")
 ```
 
-Zur Auswahl stehen sowohl Entscheidungsbäume (`gbtree` und `dart`) wie auch lineare Modelle (`gblinear`). In der bisherigen Boosting Literatur finden sich aber nur vereinzelt Vergleiche zwischen verschiedenen Base Learnern (siehe z.B. Joshi et al. 2002). Bezogen auf XGBoost im speziellen sind uns keine systematischen Vergleiche bekannt.
+One can choice between decision trees (`gbtree` und `dart`) and linear models (`gblinear`). Unfortunately, there exists only a limited literature on the comparision of different base learners for boosting (see for example Joshi et al. 2002). For the special case of XGBoost, there is to our knowledge not systematic comparision available. 
 
 
 ## Simulation and Setup
@@ -115,26 +117,10 @@ In contrast to the classification case, there is for both regression datasets a 
 
 <center>![](plots/result_oos_regression.png){ width=90% }</center>
 
-Somewhat surprisingly, there is just a small to medium correlation between the perfomances of the two models for a given dataset (see figure 3):
-
-Dataset| Correlation
------|-----:
-1|0.146
-2|0.646
-3|0.123
-4|0.297
-
-<center>![](plots/result_oos_cor.png){ width=90% }</center>
-
-In the end, it might be worth to take a look at the relationship between model performance and number of obversations in a dataset.
-As one can see in figure 4, there is almost no evidence for such an relationship. The performance is indepdentend of the number of simulated data points (at least for the range between 100 and 2500 observations). As described before, figure 4 also illustrates the greater variance of the tree based models.
-
-<center>![](plots/result_oos_n_sims.png){ width=90% }</center>
-
-
 ## Summary
 
-The results from a Monte Carlo simulation with 100 artificial datasets indicate that XGBoost with tree and linear base learners yield comparable results for classification problems, while tree learners are superior for regression problems. Based on this result, there is no single recommendation which model specification one should use when trying to minimize the model bias. In addition, tree based XGBoost models suffer from higher estimation variance compared to their linear counterparts. This findig is probably related to the more sophisticated parameter space of tree models. 
+The results from a Monte Carlo simulation with 100 artificial datasets indicate that XGBoost with tree and linear base learners yield comparable results for classification problems, while tree learners are superior for regression problems. Based on this result, there is no single recommendation which model specification one should use when trying to minimize the model bias. In addition, tree based XGBoost models suffer from higher estimation variance compared to their linear counterparts. This findig is probably related to the more sophisticated parameter space of tree models. The complete code can found on [github](https://github.com/fabianmax/XGBoost_Tree_Linear).
+ 
 
 
 ## References
