@@ -12,11 +12,13 @@ head(sim_results)
 
 # STATS -------------------------------------------------------------------
 
-sim_results %>% 
+sim_results_summary <- sim_results %>% 
   group_by(booster, data_set) %>% 
   summarise(metric_mean = round(mean(metric_test), 3),
             metric_sd = round(sd(metric_test), 3)) %>% 
   arrange(data_set, booster)
+
+save(sim_results_summary, file = "02_results/sim_results_summary.RData")
 
 
 # PLOTS -------------------------------------------------------------------
