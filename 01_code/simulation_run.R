@@ -6,7 +6,8 @@ sim_runs <- 100
 
 # Run simulation n times
 sim_results <- foreach(n = 1:sim_runs,
-                       .combine = "bind_rows") %do% {
+                       .combine = "bind_rows",
+                       .errorhandling = "remove") %do% {
   
   # Status
   print(paste(n, "of", sim_runs))
@@ -18,8 +19,10 @@ sim_results <- foreach(n = 1:sim_runs,
   df_list_current <- sim_data(n_sim = n_obs)
   
   # Run simulation
-  result_list_current <- sim_run(df_list = df_list_current,
+  result_list_current <- tryCatch({
+    sim_run(df_list = df_list_current,
                                  param_list = sim_params)
+    }, error = function(e) data.frame(NA))
   
   # Add n to result
   result_list_current <- map(result_list_current, ~ mutate(.x, n = n_obs))

@@ -14,12 +14,9 @@ rm(list = ls())
 
 sim_data <- function(n_sim) {
   
-  # Number of simulated data points
-  n_sim <- 10e3
-  
   # Classification data
-  df_class_1 <- twoClassSim(n = 1000, linearVars = 10, noiseVars = 5)
-  df_class_2 <- LPH07_1(n = 1000, class = TRUE, noiseVars = 5, corrVars = 5)
+  df_class_1 <- twoClassSim(n = n_sim, linearVars = 10, noiseVars = 5)
+  df_class_2 <- LPH07_1(n = n_sim, class = TRUE, noiseVars = 5, corrVars = 5)
   
   # Build numeric target
   df_class_1 <- df_class_1 %>% 
@@ -31,8 +28,8 @@ sim_data <- function(n_sim) {
     dplyr::select(-Class)
   
   # Regression data
-  df_reg_1 <- LPH07_2(n = 1000, noiseVars = 5)
-  df_reg_2 <- SLC14_1(n = 1000, noiseVars = 5, corrVars = 5)
+  df_reg_1 <- LPH07_2(n = n_sim, noiseVars = 5)
+  df_reg_2 <- SLC14_1(n = n_sim, noiseVars = 5, corrVars = 5)
   
   # Combine data
   df_list <- list(df_class_1, df_class_2, df_reg_1, df_reg_2)
