@@ -56,7 +56,7 @@ how big the difference between the two **base learners** (also called *boosters*
 
 Gradient boosting can be interpreted as a combination of single models (so called *base learner* or *weak learner*) to an ensemble model (@Natekin2013).
 In theory, any base learner can be used in the boosting framework, whereas some base learners have proven themself to be particularly useful: 
-Linear and penalized models (Hastie et al. 2008), (p/b-) splines (Huang/Yang 2004), and especially decision trees (James et al. 2013). Among the less frequently used base learners are random effects (Tutz/Groll 2009), radial basis functions (Gomez-Verdejo et al. 2002), markov random fields (Dietterich et al. 2004) und wavlets (Dubossarsky et al. 2016).
+Linear and penalized models (Hastie et al. 2008), (B/P-) splines (Huang/Yang 2004), and especially decision trees (James et al. 2013). Among the less frequently used base learners are random effects (Tutz/Groll 2009), radial basis functions (Gomez-Verdejo et al. 2002), markov random fields (Dietterich et al. 2004) und wavlets (Dubossarsky et al. 2016).
 
 Chen and Guestrin (2016) describe XGBoost as an additive function, given the data $D = \{(y_i, x_i)\}$, of the following form: 
 
